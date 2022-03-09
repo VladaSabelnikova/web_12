@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask, redirect, render_template, request, url_for
 from flask_login import LoginManager, login_user, login_required, logout_user, \
     current_user
+from flask_restful import Api
 from requests import get
 
 from data import db_session
@@ -16,9 +17,10 @@ from data.jobs import Jobs
 from add_job_form import AddJobForm
 from registerform import RegisterForm
 import main_api
-from task_11 import user_api
+from task_1 import user_api, users_resource
 
 app = Flask(__name__)
+api = Api(app)
 
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -47,9 +49,7 @@ def login():
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
         return render_template(
-            'login.html',
-            message="Неправильный логин или пароль",
-            form=form
+            'login.html', message="Неправильный логин или пароль", form=form
         )
     return render_template('login.html', title='Авторизация', form=form)
 
@@ -61,9 +61,7 @@ def register():
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
             return render_template(
-                'register.html',
-                title='Регистрация',
-                form=form,
+                'register.html', title='Регистрация', form=form,
                 message="Такой пользователь уже есть"
             )
         user = User()
@@ -79,15 +77,12 @@ def register():
         db_sess.commit()
         return redirect('/')
     return render_template(
-        'register.html',
-        title='Регистрация',
-        form=form
+        'register.html', title='Регистрация', form=form
     )
 
 
 @app.route('/users_show/<int:user_id>')
 def users_show(user_id):
-
     user = get(f'http://localhost:8080/api/users/{user_id}').json()
     address = user['user']['address']
     surname = user['user']['surname']
@@ -111,10 +106,7 @@ def users_show(user_id):
     map_file.write_bytes(response.content)
 
     return render_template(
-        'users_show.html',
-        surname=surname,
-        name=name,
-        address=address,
+        'users_show.html', surname=surname, name=name, address=address,
         path=url_for('static', filename='/img/map.png')
     )
 
@@ -134,9 +126,7 @@ def add_job():
         db_sess.commit()
         return redirect('/')
     return render_template(
-        'add_job.html',
-        form=form,
-        h1_text='Создать работу'
+        'add_job.html', form=form, h1_text='Создать работу'
     )
 
 
@@ -159,24 +149,22 @@ def job_edit(id):
         db_sess = db_session.create_session()
         job = db_sess.query(Jobs).filter(Jobs.id == id).first()
 
-        if job and current_user.id in (map(int, job.collaborators.split(', '))):
+        if job and current_user.id in (
+        map(int, job.collaborators.split(', '))):
             form.team_leader.data = job.team_leader
             form.job.data = job.job
             form.work_size.data = job.work_size
             form.collaborators.data = job.collaborators
             form.is_finished.data = job.is_finished
             return render_template(
-                'add_job.html',
-                form=form,
-                h1_text='Изменить работу'
+                'add_job.html', form=form, h1_text='Изменить работу'
             )
     elif request.method == 'POST':
         if form.validate_on_submit():
             db_sess = db_session.create_session()
             job = db_sess.query(Jobs).filter(Jobs.id == id).first()
             if job and current_user.id in (
-                map(int, job.collaborators.split(', '))
-            ):
+                map(int, job.collaborators.split(', '))):
                 job.team_leader = form.team_leader.data
                 job.job = form.job.data
                 job.work_size = form.work_size.data
@@ -208,7 +196,11 @@ def index():
 def main():
     db_session.global_init('db/blogs.db')
     app.register_blueprint(main_api.blueprint)
-    app.register_blueprint(user_api.blueprint_user)
+
+    api.add_resource(users_resource.UsersResource, '/api/v2/users/<int:user_id>')
+    api.add_resource(users_resource.UsersListResource, '/api/v2/users')
+
+    # app.register_blueprint(user_api.blueprint_user)
     app.run(port=8080, host='127.0.0.1')
 
 

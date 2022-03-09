@@ -1,9 +1,9 @@
 import flask
 from flask import jsonify, make_response, request
 
-from task_11.data import db_session
-from task_11.data.users import User
-from task_11.data import __all_models
+from task_1.data import db_session
+from task_1.data.users import User
+from task_1.data import __all_models
 
 
 db_session.global_init('db/blogs.db')
