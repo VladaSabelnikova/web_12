@@ -1,0 +1,21 @@
+from flask_restful import reqparse
+
+parser_editing_user = reqparse.RequestParser()
+parser_editing_user.add_argument('surname', required=True)
+parser_editing_user.add_argument('name', required=True)
+parser_editing_user.add_argument('age', required=True)
+parser_editing_user.add_argument('position', required=True)
+parser_editing_user.add_argument('speciality', required=True)
+parser_editing_user.add_argument('address', required=True)
+parser_editing_user.add_argument('email', required=True)
+parser_editing_user.add_argument('password', required=True)
+
+parser_add_user = reqparse.RequestParser()
+parser_add_user.add_argument('surname', required=True)
+parser_add_user.add_argument('name', required=True)
+parser_add_user.add_argument('age', required=True)
+parser_add_user.add_argument('position', required=True)
+parser_add_user.add_argument('speciality', required=True)
+parser_add_user.add_argument('address', required=True)
+parser_add_user.add_argument('email', required=True)
+parser_add_user.add_argument('password', required=True)
